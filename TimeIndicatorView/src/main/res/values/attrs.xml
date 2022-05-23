@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--时间指示器样式-->
+    <declare-styleable name="TimeIndicator">
+        <!--是否为倒计时-->
+        <attr name="tiIsCountdown" format="boolean" />
+        <!--时间格式-->
+        <attr name="tiDataFormat" format="string" />
+        <!--指针背景颜色-->
+        <attr name="tiPointerBackgroundColor" format="color" />
+        <!--指针文字颜色-->
+        <attr name="tiPointerTextColor" format="color" />
+        <!--指针文字大小-->
+        <attr name="tiPointerTextSize" format="dimension" />
+        <!--指示器文字样式-->
+        <attr name="tiPointerTextStyle" format="integer">
+            <flag name="tiNormal" value="0" />
+            <flag name="tiBold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--指针视图圆角-->
+        <attr name="tiPointerRadius" format="dimension" />
+        <!--指针视图内边距-->
+        <attr name="tiPointerWidth" format="dimension" />
+        <attr name="tiPointerHeight" format="dimension" />
+        <!--时间后缀文字颜色-->
+        <attr name="tiSuffixTextColor" format="color" />
+        <!--时间后缀文字大小-->
+        <attr name="tiSuffixTextSize" format="dimension" />
+        <!--时间后缀文字样式-->
+        <attr name="tiSuffixTextStyle" format="integer">
+            <flag name="tiNormal" value="0" />
+            <flag name="tiBold" value="1" />
+            <flag name="italic" value="2" />
+        </attr>
+        <!--时间后缀文字-->
+        <attr name="tiSuffixTest" format="string" />
+        <!--后缀左外边距-->
+        <attr name="tiSuffixMarginLeft" format="dimension" />
+        <!--后缀右外边距-->
+        <attr name="tiSuffixMarginRight" format="dimension" />
+        <!--时间后缀重力控制器-->
+        <attr name="tiSuffixGravity">
+            <enum name="center" value="0" />
+            <enum name="top" value="1" />
+            <enum name="bottom" value="2" />
+        </attr>
+    </declare-styleable>
+
+</resources>

@@ -1,0 +1,3 @@
+include ':TimeIndicatorView'
+include ':app'
+rootProject.name = "TimeIndicator"
