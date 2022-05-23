@@ -6,13 +6,25 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
+    <com.mr.timeindicatorview.TimeIndicatorView
+        android:id="@+id/time_indicator_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:tiDataFormat="HH:mm:ss"
+        app:tiPointerBackgroundColor="#FF0909"
+        app:tiPointerHeight="14dp"
+        app:tiPointerRadius="2dp"
+        app:tiPointerTextColor="@color/white"
+        app:tiPointerTextSize="10dp"
+        app:tiPointerTextStyle="tiBold"
+        app:tiPointerWidth="14dp"
+        app:tiSuffixMarginLeft="2dp"
+        app:tiSuffixMarginRight="2dp"
+        app:tiSuffixTextColor="#FF0909"
+        app:tiSuffixTextSize="12dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
