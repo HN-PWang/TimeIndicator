@@ -15,9 +15,9 @@ public class FormatNodeParser {
 
     public String dateFormat;
 
-    private List<String> nodeList = Arrays.asList(TimeIndicatorView.YEARS
-            , TimeIndicatorView.MONTH, TimeIndicatorView.DAY, TimeIndicatorView.HOURS
-            , TimeIndicatorView.MINUTE, TimeIndicatorView.SECONDS);
+    private List<String> nodeList = Arrays.asList(TimeIndicatorView.YEARS, TimeIndicatorView.MONTH
+            , TimeIndicatorView.DAY, TimeIndicatorView.HOURS, TimeIndicatorView.MINUTE
+            , TimeIndicatorView.SECONDS, TimeIndicatorView.MILLISECOND);
 
     private List<String> suffixList = Arrays.asList(TimeIndicatorView.SUFFIX1
             , TimeIndicatorView.SUFFIX2, TimeIndicatorView.SUFFIX3, TimeIndicatorView.SUFFIX4

@@ -13,18 +13,62 @@
         android:layout_marginLeft="20dp"
         android:layout_marginTop="20dp"
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:tiDataFormat="HH:mm:ss"
+        app:tiDataFormat="HH:mm:ss:SSS"
         app:tiPointerBackgroundColor="#FF0909"
         app:tiPointerHeight="14dp"
         app:tiPointerRadius="2dp"
         app:tiPointerTextColor="@color/white"
         app:tiPointerTextSize="10dp"
         app:tiPointerTextStyle="tiBold"
-        app:tiPointerWidth="14dp"
+        app:tiPointerWidth="24dp"
         app:tiSuffixMarginLeft="2dp"
         app:tiSuffixMarginRight="2dp"
         app:tiSuffixTextColor="#FF0909"
         app:tiSuffixTextSize="12dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:id="@+id/tv_start"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="开始"
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/tv_smaller"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="变小"
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/tv_bigger"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="变大"
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/tv_stop"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="暂停"
+            android:textSize="15dp" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

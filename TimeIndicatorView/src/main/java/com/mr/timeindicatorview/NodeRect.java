@@ -9,7 +9,7 @@ public class NodeRect {
 
     public boolean isPointer;
     public String format;
-    public String text = "00";
+    public String text;
     public int tx;
     public int ty;
     public int tWidth;

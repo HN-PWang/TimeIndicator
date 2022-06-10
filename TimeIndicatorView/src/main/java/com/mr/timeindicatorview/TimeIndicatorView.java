@@ -27,9 +27,12 @@ import java.util.List;
  */
 public class TimeIndicatorView extends View {
 
-    private static final long TIME_OF_DAY = 24 * 60 * 60 * 1000;
-    private static final int TIME_OF_HOURS = 60 * 60 * 1000;
-    private static final int TIME_OF_MINUTE = 60 * 1000;
+    private static final int TIME_OF_MILLISECOND = 1000;
+    private static final int TIME_OF_MINUTE = 60 * TIME_OF_MILLISECOND;
+    private static final int TIME_OF_HOURS = 60 * TIME_OF_MINUTE;
+    private static final int TIME_OF_DAY = 24 * TIME_OF_HOURS;
+    private static final long TIME_OF_MONTH = 30L * TIME_OF_DAY;
+    private static final long TIME_OF_YEAR = 365L * TIME_OF_DAY;
 
     public static final String YEARS = "yyyy";
     public static final String MONTH = "MM";
@@ -37,6 +40,7 @@ public class TimeIndicatorView extends View {
     public static final String HOURS = "HH";
     public static final String MINUTE = "mm";
     public static final String SECONDS = "ss";
+    public static final String MILLISECOND = "SSS";
 
     public static final String SUFFIX1 = "-";
     public static final String SUFFIX2 = ":";
@@ -50,7 +54,7 @@ public class TimeIndicatorView extends View {
     public static final String SUFFIX10 = "秒";
     public static final String SUFFIX11 = " ";
 
-    public static final long DEF_MILLIS_IN_FUTURE = 1000;
+    public static final long DEF_MILLIS_IN_FUTURE = 20;
 
     /**
      * 默认时间格式
@@ -88,6 +92,11 @@ public class TimeIndicatorView extends View {
     private static final int DEF_POINTER_GRAVITY = 1;
 
     /**
+     * 默认倒计时状态
+     */
+    private static final boolean DEF_IS_COUNTDOWN = false;
+
+    /**
      * 是否为倒计时
      */
     private boolean isCountdown;
@@ -110,7 +119,7 @@ public class TimeIndicatorView extends View {
     /**
      * 指针文字大小
      */
-    private int pointerTextSize;
+    private float pointerTextSize;
 
     /**
      * 指针文字样式
@@ -140,7 +149,7 @@ public class TimeIndicatorView extends View {
     /**
      * 后缀文字大小
      */
-    private int suffixTextSize;
+    private float suffixTextSize;
 
     /**
      * 后缀文字样式
@@ -157,7 +166,15 @@ public class TimeIndicatorView extends View {
      */
     private int suffixMarginRight;
 
+    /**
+     * 计时间隔
+     */
     private long millisInFuture = DEF_MILLIS_IN_FUTURE;
+
+    /**
+     * 计时器初始化时间
+     */
+    private long mTimerInitializationTime;
 
     /**
      * 视图宽
@@ -169,6 +186,9 @@ public class TimeIndicatorView extends View {
      */
     private int mViewHeight;
 
+    /**
+     * 开始时间
+     */
     private long startTime = 0;
 
     private List<FormatNode> formatNodes;
@@ -186,6 +206,12 @@ public class TimeIndicatorView extends View {
     private List<NodeRect> nodeRectList;
 
     private CountDownTimer mCountDownTimer;
+
+    private final DecimalFormat df1 = new DecimalFormat("00");
+
+    private final DecimalFormat df2 = new DecimalFormat("000");
+
+    private final DecimalFormat df3 = new DecimalFormat("0000");
 
     public TimeIndicatorView(Context context) {
         super(context);
@@ -206,9 +232,9 @@ public class TimeIndicatorView extends View {
         TypedArray ta = context.getTheme().obtainStyledAttributes(attrs,
                 R.styleable.TimeIndicator, defStyleAttr, 0);
 
+        isCountdown = ta.getBoolean(R.styleable.TimeIndicator_tiIsCountdown, DEF_IS_COUNTDOWN);
         dataFormat = ta.getString(R.styleable.TimeIndicator_tiDataFormat);
         dataFormat = TextUtils.isEmpty(dataFormat) ? DEF_DATA_FORMAT : dataFormat;
-
         pointerBackgroundColor = ta.getColor(R.styleable.TimeIndicator_tiPointerBackgroundColor
                 , DEF_POINTER_BACKGROUND_COLOR);
         pointerTextColor = ta.getColor(R.styleable.TimeIndicator_tiPointerTextColor, DEF_TEXT_COLOR);
@@ -245,18 +271,103 @@ public class TimeIndicatorView extends View {
         mSuffixTextPaint.setAntiAlias(true);
         mSuffixTextPaint.setColor(suffixTextColor);
         mSuffixTextPaint.setTextSize(suffixTextSize);
+        setTypeface(mSuffixTextPaint, suffixTextStyle);
 
         mTimePointerPaint.setAntiAlias(true);
         mTimePointerPaint.setColor(pointerBackgroundColor);
 
         parsingDataFormatNode();
 
-        setTimeDataToNodeRect(startTime);
-
-        postInvalidate();
+        invalidate();
     }
 
-    public void setTypeface(Paint textPaint, int style) {
+    /**
+     * 设置时间格式  例如 HH:mm:ss
+     *
+     * @param dataFormat
+     */
+    public void setDataFormat(String dataFormat) {
+        this.dataFormat = dataFormat;
+
+        parsingDataFormatNode();
+
+        setTimeDataToNodeRect(startTime);
+
+        invalidate();
+    }
+
+    /**
+     * 设置是否为倒计时
+     */
+    public void setIsCountdown(boolean isCountdown) {
+        this.isCountdown = isCountdown;
+
+        buildTimer();
+    }
+
+    /**
+     * 设置时间文字样式
+     */
+    public void setTimeTextColor(int color) {
+        this.pointerTextColor = color;
+
+        if (mTimeTextPaint != null) {
+            mTimeTextPaint.setColor(pointerTextColor);
+
+            invalidate();
+        }
+    }
+
+    /**
+     * 设置时间文字字体大小
+     */
+    public void setTimeTextSize(float size) {
+        this.pointerTextSize = size;
+
+        if (mTimeTextPaint != null) {
+            mTimeTextPaint.setTextSize(pointerTextSize);
+
+            requestLayout();
+        }
+    }
+
+    public float getTimeTextSize() {
+        return pointerTextSize;
+    }
+
+    /**
+     * 设置后缀单位文字颜色
+     */
+    public void setSuffixTextColor(int color) {
+        this.suffixTextColor = color;
+
+        if (mSuffixTextPaint != null) {
+            mSuffixTextPaint.setColor(suffixTextColor);
+
+            invalidate();
+        }
+    }
+
+    /**
+     * 设置后缀单位文字字体大小
+     *
+     * @param size
+     */
+    public void setSuffixTextSize(float size) {
+        this.suffixTextSize = size;
+
+        if (mSuffixTextPaint != null) {
+            mSuffixTextPaint.setTextSize(suffixTextSize);
+
+            requestLayout();
+        }
+    }
+
+    public float getSuffixTextSize() {
+        return suffixTextSize;
+    }
+
+    private void setTypeface(Paint textPaint, int style) {
         if (style > 0) {
             textPaint.setFakeBoldText(true);
             textPaint.setTextSkewX(0);
@@ -298,17 +409,11 @@ public class TimeIndicatorView extends View {
         }
 
         ctw = getPaddingLeft();
-        nodeRectList.clear();
-        for (int i = 0; i < formatNodes.size(); i++) {
-            FormatNode node = formatNodes.get(i);
 
-            NodeRect nodeRect = new NodeRect();
-            nodeRect.isPointer = node.isPointer;
-            nodeRect.format = node.format;
-
+        for (NodeRect nodeRect : nodeRectList) {
             Rect bounds = getMeasureRect(mMeasureRect);
-            if (node.isPointer) {
-                mTimeTextPaint.getTextBounds("00", 0, "00".length(), bounds);
+            if (nodeRect.isPointer) {
+                mTimeTextPaint.getTextBounds(nodeRect.text, 0, nodeRect.text.length(), bounds);
 
                 int textW = bounds.width();
                 int textH = bounds.height();
@@ -333,8 +438,6 @@ public class TimeIndicatorView extends View {
 
                 ctw = ctw + suffixMarginLeft + textW + suffixMarginRight;
             }
-
-            nodeRectList.add(nodeRect);
         }
 
         ctw = ctw + getPaddingRight();
@@ -372,38 +475,12 @@ public class TimeIndicatorView extends View {
             }
     }
 
-    public void setDataFormat(String dataFormat) {
-        this.dataFormat = dataFormat;
-
-        parsingDataFormatNode();
-
-        setTimeDataToNodeRect(startTime);
-
-        postInvalidate();
-    }
-
     public void setStartTime(long time) {
         startTime = time;
-        if (startTime <= 0) return;
 
-        if (null != mCountDownTimer) {
-            mCountDownTimer.cancel();
-            mCountDownTimer = null;
-        }
+        buildTimer();
 
-        mCountDownTimer = new CountDownTimer(startTime, millisInFuture) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                updateTimeView(millisUntilFinished);
-            }
-
-            @Override
-            public void onFinish() {
-//                allShowZero();
-            }
-        };
-
-        updateTimeView(startTime);
+        setTimeDataToNodeRect(startTime);
     }
 
     public void start() {
@@ -413,14 +490,72 @@ public class TimeIndicatorView extends View {
 
     public void stop() {
         if (mCountDownTimer != null)
-            mCountDownTimer.onFinish();
+            mCountDownTimer.cancel();
     }
 
+    /**
+     * 构建计时器
+     */
+    private void buildTimer() {
+        if (isCountdown) {
+            //倒计时
+            mTimerInitializationTime = startTime;
+        } else {
+            //顺时针
+            mTimerInitializationTime = Long.MAX_VALUE;
+        }
+
+        if (null != mCountDownTimer) {
+            mCountDownTimer.cancel();
+            mCountDownTimer = null;
+        }
+
+        mCountDownTimer = new CountDownTimer(mTimerInitializationTime, millisInFuture) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                if (isCountdown) {
+                    setTimeDataToNodeRect(millisUntilFinished);
+                } else {
+                    setTimeDataToNodeRect(mTimerInitializationTime - millisUntilFinished + startTime);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        };
+
+        setTimeDataToNodeRect(startTime);
+    }
+
+    /**
+     * 解析时间格式节点
+     */
     private void parsingDataFormatNode() {
-        nodeRectList.clear();
         FormatNodeParser parser = new FormatNodeParser(dataFormat);
         parser.parsing();
         formatNodes = parser.getFormatNodes();
+
+        fillNodeRect();
+    }
+
+    /**
+     * 填充节点绘制工具
+     */
+    private void fillNodeRect() {
+        nodeRectList.clear();
+        if (formatNodes != null && formatNodes.size() != 0) {
+            for (FormatNode node : formatNodes) {
+                NodeRect nodeRect = new NodeRect();
+                nodeRect.isPointer = node.isPointer;
+                nodeRect.format = node.format;
+
+                nodeRectList.add(nodeRect);
+            }
+        }
+
+        setTimeDataToNodeRect(startTime);
     }
 
     private RectF getPointerRectF(int l, int t, int r, int b) {
@@ -444,46 +579,48 @@ public class TimeIndicatorView extends View {
         return mMeasureRect;
     }
 
-    private void updateTimeView(long time) {
-        setTimeDataToNodeRect(time);
-
-        postInvalidate();
-    }
-
+    /**
+     * 填充节点绘制工具写入数据
+     */
     private void setTimeDataToNodeRect(long time) {
-        int day = (int) (time / TIME_OF_DAY);
+        int year = (int) (time / TIME_OF_YEAR);
+        int month = (int) ((time % TIME_OF_YEAR) / TIME_OF_MONTH);
+        int day = (int) ((time % TIME_OF_MONTH) / TIME_OF_DAY);
         int hours = (int) ((time % TIME_OF_DAY) / TIME_OF_HOURS);
-        int minute = (int) (time % TIME_OF_HOURS) / TIME_OF_MINUTE;
-        int seconds = (int) (time % TIME_OF_MINUTE) / 1000;
+        int minute = (int) ((time % TIME_OF_HOURS) / TIME_OF_MINUTE);
+        int seconds = (int) (time % TIME_OF_MINUTE) / TIME_OF_MILLISECOND;
+        int millisecond = (int) (time % TIME_OF_MILLISECOND);
 
-        String dayStr = formatPriceToPointAll(day, "00");
-        String hoursStr = formatPriceToPointAll(hours, "00");
-        String minuteStr = formatPriceToPointAll(minute, "00");
-        String secondsStr = formatPriceToPointAll(seconds, "00");
+        String yearStr = df3.format(year);
+        String monthStr = df1.format(month);
+        String dayStr = df1.format(day);
+        String hoursStr = df1.format(hours);
+        String minuteStr = df1.format(minute);
+        String secondsStr = df1.format(seconds);
+        String millisecondStr = df2.format(millisecond);
 
-        if (formatNodes != null) {
+        if (nodeRectList != null) {
             for (NodeRect rect : nodeRectList) {
-                if (!TextUtils.isEmpty(rect.format)) {
-                    if (rect.format.equals(YEARS)) {
-                        rect.text = "00";
-                    } else if (rect.format.equals(MONTH)) {
-                        rect.text = "00";
-                    } else if (rect.format.equals(DAY)) {
-                        rect.text = dayStr;
-                    } else if (rect.format.equals(HOURS)) {
-                        rect.text = hoursStr;
-                    } else if (rect.format.equals(MINUTE)) {
-                        rect.text = minuteStr;
-                    } else if (rect.format.equals(SECONDS)) {
-                        rect.text = secondsStr;
-                    }
+                if (YEARS.equals(rect.format)) {
+                    rect.text = yearStr;
+                } else if (MONTH.equals(rect.format)) {
+                    rect.text = monthStr;
+                } else if (DAY.equals(rect.format)) {
+                    rect.text = dayStr;
+                } else if (HOURS.equals(rect.format)) {
+                    rect.text = hoursStr;
+                } else if (MINUTE.equals(rect.format)) {
+                    rect.text = minuteStr;
+                } else if (SECONDS.equals(rect.format)) {
+                    rect.text = secondsStr;
+                } else if (MILLISECOND.equals(rect.format)) {
+                    rect.text = millisecondStr;
+                } else {
+                    rect.text = "00";
                 }
             }
         }
+        invalidate();
     }
 
-    public static String formatPriceToPointAll(float value, String format) {
-        DecimalFormat df = new DecimalFormat(format);
-        return df.format(value);
-    }
 }
